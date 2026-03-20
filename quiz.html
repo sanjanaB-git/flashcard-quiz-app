@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Flashcard Quiz App</title>
+    <style>
+        body {
+            font-family: Arial;
+            text-align: center;
+            background: #eef2f3;
+        }
+
+        h1 { color: #333; }
+
+        .card-container {
+            perspective: 1000px;
+            width: 360px;
+            margin: 20px auto;
+        }
+
+        .card {
+            width: 100%;
+            height: 380px;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }
+
+        .card.flip { transform: rotateY(180deg); }
+
+        .front, .back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 12px;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .back {
+            transform: rotateY(180deg);
+            justify-content: center;
+        }
+
+        .image-box {
+            border: 2px solid #ccc;
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px;
+            background: #fafafa;
+        }
+
+        img {
+            width: 140px;
+            height: 90px;
+        }
+
+        .option {
+            margin: 5px;
+            padding: 8px;
+            background: #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 80%;
+        }
+
+        .correct { background: lightgreen; }
+        .wrong { background: #ff7b7b; }
+
+        .controls {
+            margin-top: 10px;
+        }
+
+        button {
+            margin: 10px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-show { background: orange; color: white; }
+        .btn-nav { background: #333; color: white; }
+        .btn-start { background: #4CAF50; color: white; font-size: 16px; }
+
+        .result-box, .home-box {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            width: 300px;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+
+<div id="container">
+
+    <!-- HOME PAGE -->
+    <div class="home-box" id="home">
+        <h1>📚 Flashcard Quiz App</h1>
+        <h2>🌍 Countries Quiz</h2>
+        <button class="btn-start" onclick="startQuiz()">Start</button>
+    </div>
+
+</div>
+
+<script>
+let quiz = [
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/fr.png",
+  options:["France","Italy","Germany","Spain"], answer:"France"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/jp.png",
+  options:["China","Japan","Korea","Thailand"], answer:"Japan"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/in.png",
+  options:["India","Pakistan","Nepal","Bangladesh"], answer:"India"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/us.png",
+  options:["USA","UK","Canada","Australia"], answer:"USA"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/de.png",
+  options:["Germany","Belgium","Austria","Netherlands"], answer:"Germany"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/it.png",
+  options:["Italy","France","Mexico","Spain"], answer:"Italy"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/cn.png",
+  options:["China","Vietnam","Japan","Korea"], answer:"China"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/br.png",
+  options:["Brazil","Argentina","Peru","Chile"], answer:"Brazil"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/ca.png",
+  options:["Canada","USA","Denmark","Norway"], answer:"Canada"},
+
+ {q:"Which country flag is this?", img:"https://flagcdn.com/w320/au.png",
+  options:["Australia","New Zealand","UK","USA"], answer:"Australia"}
+];
+
+let current = 0;
+let score = 0;
+let answered = false;
+
+function startQuiz(){
+    document.getElementById("container").innerHTML = `
+        <h1>📚 Flashcard Quiz App</h1>
+        <h2>🌍 Countries Quiz</h2>
+        <p id="score">Score: 0</p>
+
+        <div class="card-container">
+            <div class="card" id="card">
+
+                <div class="front">
+                    <h3 id="question"></h3>
+
+                    <div class="image-box">
+                        <img id="image">
+                    </div>
+
+                    <div id="options"></div>
+
+                    <div class="controls">
+                        <button class="btn-show" onclick="showAnswer()">Show Answer</button>
+                    </div>
+                </div>
+
+                <div class="back">
+                    <h2 id="answer"></h2>
+
+                    <div class="controls">
+                        <button class="btn-nav" onclick="prevQuestion()">Previous</button>
+                        <button class="btn-nav" onclick="nextQuestion()">Next</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    `;
+
+    loadQuestion();
+}
+
+function loadQuestion(){
+    let q = quiz[current];
+
+    document.getElementById("question").innerText = q.q;
+    document.getElementById("image").src = q.img;
+    document.getElementById("answer").innerText = "Answer: " + q.answer;
+
+    let optionsDiv = document.getElementById("options");
+    optionsDiv.innerHTML = "";
+
+    answered = false;
+
+    q.options.forEach(opt => {
+        let btn = document.createElement("div");
+        btn.className = "option";
+        btn.innerText = opt;
+
+        btn.onclick = () => checkAnswer(btn, opt);
+
+        optionsDiv.appendChild(btn);
+    });
+
+    document.getElementById("card").classList.remove("flip");
+}
+
+function checkAnswer(btn, selected){
+    if(answered) return;
+
+    let correct = quiz[current].answer;
+
+    if(selected === correct){
+        btn.classList.add("correct");
+        score++;
+    } else {
+        btn.classList.add("wrong");
+    }
+
+    answered = true;
+    document.getElementById("score").innerText = "Score: " + score;
+}
+
+function showAnswer(){
+    if(!answered) return;
+    document.getElementById("card").classList.add("flip");
+}
+
+function nextQuestion(){
+    document.getElementById("card").classList.remove("flip");
+
+    setTimeout(() => {
+        if(current === quiz.length - 1){
+            showFinalScore();
+        } else {
+            current++;
+            loadQuestion();
+        }
+    }, 300);
+}
+
+function prevQuestion(){
+    document.getElementById("card").classList.remove("flip");
+
+    setTimeout(() => {
+        if(current > 0){
+            current--;
+            loadQuestion();
+        }
+    }, 300);
+}
+
+function showFinalScore(){
+    document.getElementById("container").innerHTML = `
+        <div class="result-box">
+            <h2>🎉 Quiz Completed!</h2>
+            <h3>Your Score: ${score} / ${quiz.length}</h3>
+            <button onclick="location.reload()">Go Home</button>
+        </div>
+    `;
+}
+</script>
+
+</body>
+</html>
